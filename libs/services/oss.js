@@ -5,10 +5,10 @@ module.exports = fp(async (fastify, options) => {
   const { services } = fastify.aws;
   const createClient = () => {
     return new S3Client({
-      region: options.oss.region,
+      region: options.oss?.region,
       credentials: {
-        accessKeyId: options.oss.accessKeyId,
-        secretAccessKey: options.oss.secretAccessKey
+        accessKeyId: options.oss?.accessKeyId,
+        secretAccessKey: options.oss?.accessKeySecret
       }
     });
   };
