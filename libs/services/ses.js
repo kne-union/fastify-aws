@@ -1,20 +1,22 @@
-const sesTransport = require('nodemailer-ses-transport');
 const nodemailer = require('nodemailer');
-const { SESClient } = require('@aws-sdk/client-ses');
+const { SESv2Client, SendEmailCommand } = require('@aws-sdk/client-sesv2');
 const fp = require('fastify-plugin');
 const pify = require('pify');
 
 module.exports = fp(async (fastify, options) => {
-  const client = new SESClient({ region: options.ses?.region });
-  const transporter = nodemailer.createTransport(
-    sesTransport({
-      ses: client,
-      awsAccessKeyId: options.oss.accessKeyId,
-      awsSecretKey: options.oss.secretAccessKey
-    })
-  );
+  const { services } = fastify.aws;
+  const sesClient = new SESv2Client({
+    region: options.ses?.region,
+    credentials: {
+      accessKeyId: options.ses?.accessKeyId,
+      secretAccessKey: options.ses?.accessKeySecret
+    }
+  });
+  const transporter = nodemailer.createTransport({
+    SES: { sesClient, SendEmailCommand }
+  });
 
-  fastify.aws.ses = mailOptions => {
-    return pify(transporter.sendMail)(mailOptions);
+  services.ses = mailOptions => {
+    return pify(transporter.sendMail.bind(transporter))(mailOptions);
   };
 });
